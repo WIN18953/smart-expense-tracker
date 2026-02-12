@@ -1,0 +1,82 @@
+ScreenManager:
+    HomeScreen:
+        name: "home"
+    AddScreen:
+        name: "add"
+    ReportScreen:
+        name: "report"
+    SettingScreen:
+        name: "setting"
+
+
+<HomeScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        Label:
+            text: "Smart Expense Tracker"
+            font_size: 28
+
+        Label:
+            id: income_label
+            text: "Income: 0"
+
+        Label:
+            id: expense_label
+            text: "Expense: 0"
+
+        Label:
+            id: balance_label
+            text: "Balance: 0"
+
+        Button:
+            text: "Add Transaction"
+            on_press: root.manager.current = "add"
+
+        Button:
+            text: "View Report"
+            on_press: root.manager.current = "report"
+
+        Button:
+            text: "Settings"
+            on_press: root.manager.current = "setting"
+
+
+<AddScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 10
+
+        Label:
+            text: "Add Transaction"
+
+        Button:
+            text: "Back"
+            on_press: root.manager.current = "home"
+
+
+<ReportScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        Label:
+            text: "Report Screen"
+
+        Button:
+            text: "Back"
+            on_press: root.manager.current = "home"
+
+
+<SettingScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        Label:
+            text: "Settings"
+
+        Button:
+            text: "Back"
+            on_press: root.manager.current = "home"
