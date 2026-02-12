@@ -52,10 +52,39 @@ ScreenManager:
 
         Label:
             text: "Add Transaction"
+            font_size: 24
+
+        TextInput:
+            id: amount_input
+            hint_text: "Amount"
+            input_filter: "float"
+
+        TextInput:
+            id: note_input
+            hint_text: "Note"
+
+        Spinner:
+            id: type_spinner
+            text: "Income"
+            values: ["Income", "Expense"]
+
+        Spinner:
+            id: category_spinner
+            text: "General"
+            values: ["General", "Food", "Travel", "Study", "Other"]
+
+        TextInput:
+            id: date_input
+            hint_text: "Date (YYYY-MM)"
 
         Button:
-            text: "Back"
+            text: "Save"
+            on_press: root.save_transaction()
+
+        Button:
+            text: "Cancel"
             on_press: root.manager.current = "home"
+
 
 
 <ReportScreen>:

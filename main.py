@@ -35,7 +35,39 @@ class HomeScreen(Screen):
 
 
 class AddScreen(Screen):
-    pass
+
+    def save_transaction(self):
+        amount_text = self.ids.amount_input.text
+        note = self.ids.note_input.text
+        t_type = self.ids.type_spinner.text
+        category = self.ids.category_spinner.text
+        date = self.ids.date_input.text
+
+        # ตรวจสอบว่าใส่จำนวนเงินไหม
+        if amount_text == "":
+            return
+
+        amount = float(amount_text)
+
+        data = load_data()
+
+        data.append({
+            "amount": amount,
+            "note": note,
+            "type": "income" if t_type == "Income" else "expense",
+            "category": category,
+            "date": date
+        })
+
+        save_data(data)
+
+        # เคลียร์ช่องกรอก
+        self.ids.amount_input.text = ""
+        self.ids.note_input.text = ""
+
+        # กลับหน้า home
+        self.manager.current = "home"
+
 
 
 class ReportScreen(Screen):
