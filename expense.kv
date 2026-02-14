@@ -90,9 +90,33 @@ ScreenManager:
 <ReportScreen>:
     BoxLayout:
         orientation: "vertical"
+        padding: 20
+        spacing: 10
 
         Label:
-            text: "Report Screen"
+            text: "Monthly Report"
+            font_size: 24
+
+        Spinner:
+            id: month_spinner
+            text: "Select Month"
+            values: []
+
+        Button:
+            text: "Filter"
+            on_press: root.filter_report()
+
+        Label:
+            id: report_income
+            text: "Income: 0"
+
+        Label:
+            id: report_expense
+            text: "Expense: 0"
+
+        Label:
+            id: report_balance
+            text: "Balance: 0"
 
         Button:
             text: "Back"
