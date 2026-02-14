@@ -19,9 +19,19 @@ def save_data(data):
 
 
 # ---------- Screens ----------
-class HomeScreen(Screen):
+from kivy.clock import Clock
+from kivy.uix.screenmanager import Screen
 
-    def on_enter(self):
+class HomeScreen(Screen):
+    def on_kv_post(self, base_widget):
+        # เรียกครั้งแรกหลัง kv ถูก apply แล้ว
+        self.refresh()
+
+    def on_enter(self, *args):
+        # เวลาเปลี่ยนกลับมาหน้านี้ในภายหลัง
+        Clock.schedule_once(lambda dt: self.refresh(), 0)
+
+    def refresh(self, *args):
         self.update_summary()
         self.display_transactions()
 
@@ -31,36 +41,32 @@ class HomeScreen(Screen):
         expense = sum(item["amount"] for item in data if item["type"] == "expense")
         balance = income - expense
 
-        self.ids.income_label.text = f"Income: {income}"
-        self.ids.expense_label.text = f"Expense: {expense}"
-        self.ids.balance_label.text = f"Balance: {balance}"
+        # ป้องกันกรณี id ไม่เจอ (ช่วยดีบัก)
+        if 'income_row' in self.ids:
+            self.ids.income_row.ids.value.text = f"{income}"
+        if 'expense_row' in self.ids:
+            self.ids.expense_row.ids.value.text = f"{expense}"
+        if 'balance_row' in self.ids:
+            self.ids.balance_row.ids.value.text = f"{balance}"
 
     def display_transactions(self):
-        data = load_data()
-        container = self.ids.transaction_list
+        container = self.ids.get("transaction_list")
+        if not container:
+            print("transaction_list not found; ids:", list(self.ids.keys()))
+            return
+
         container.clear_widgets()
-
+        data = load_data()
+        from kivy.uix.button import Button
         for index, item in enumerate(data):
-            text = f"{item['type']} | {item['amount']} | {item['category']}"
-            from kivy.uix.button import Button
-
-            btn = Button(
-                text=text,
-                size_hint_y=None,
-                height=40
-            )
-
+            text = f"{item['type']}  {item['amount']}  {item['category']}"
+            btn = Button(text=text, size_hint_y=None, height=40)
             btn.bind(on_press=lambda instance, i=index: self.delete_transaction(i))
             container.add_widget(btn)
-
-    def delete_transaction(self, index):
-        data = load_data()
-        if index < len(data):
-            data.pop(index)
-            save_data(data)
-
-        self.update_summary()
-        self.display_transactions()
+        
+    def on_enter(self, *args):
+        Clock.schedule_once(lambda dt: self.update_summary(), 0)
+        Clock.schedule_once(lambda dt: self.display_transactions(), 0)
 
 
 class AddScreen(Screen):
