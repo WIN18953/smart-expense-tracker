@@ -43,6 +43,18 @@ ScreenManager:
             text: "Settings"
             on_press: root.manager.current = "setting"
 
+        Label:
+            text: "Transactions:"
+
+        ScrollView:
+            GridLayout:
+                id: transaction_list
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 5
+
+
 
 <AddScreen>:
     BoxLayout:
