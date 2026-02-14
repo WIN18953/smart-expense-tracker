@@ -71,7 +71,31 @@ class AddScreen(Screen):
 
 
 class ReportScreen(Screen):
-    pass
+
+    def on_enter(self):
+        self.load_months()
+
+    def load_months(self):
+        data = load_data()
+        months = list(set(item["date"] for item in data if item["date"] != ""))
+        if months:
+            self.ids.month_spinner.values = months
+            self.ids.month_spinner.text = months[0]
+
+    def filter_report(self):
+        selected_month = self.ids.month_spinner.text
+        data = load_data()
+
+        filtered = [item for item in data if item["date"] == selected_month]
+
+        income = sum(item["amount"] for item in filtered if item["type"] == "income")
+        expense = sum(item["amount"] for item in filtered if item["type"] == "expense")
+        balance = income - expense
+
+        self.ids.report_income.text = f"Income: {income}"
+        self.ids.report_expense.text = f"Expense: {expense}"
+        self.ids.report_balance.text = f"Balance: {balance}"
+
 
 
 class SettingScreen(Screen):
