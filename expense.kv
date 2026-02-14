@@ -1,7 +1,6 @@
 #:import dp kivy.metrics.dp
 #:import hex kivy.utils.get_color_from_hex
 
-# --- แก้ไขส่วนนี้ในไฟล์ expense.kv ---
 <TransactionItem@BoxLayout>:
     canvas.before:
         Color:
@@ -14,7 +13,6 @@
     padding: dp(15), 0
     spacing: dp(10)
 
-    # 1. ไอคอนสี
     Widget:
         size_hint: None, None
         size: dp(10), dp(10)
@@ -26,29 +24,26 @@
                 pos: self.pos
                 size: self.size
 
-    # 2. ข้อความรายการ (ให้ยืดขยายเต็มพื้นที่ที่เหลือ)
     Label:
         text: root.text_content if hasattr(root, 'text_content') else ""
         font_size: '14sp'
         color: app.col_text
         text_size: self.width, None
-        size_hint_x: 1  # ยืดกินพื้นที่
+        size_hint_x: 1
         halign: 'left'
         valign: 'middle'
         font_name: app.font_name
 
-    # 3. ปุ่มลบ (เพิ่มใหม่)
     Button:
-        text: "Del" # หรือจะใช้คำว่า "ลบ"
+        text: "Del"
         size_hint: None, None
         size: dp(50), dp(30)
         pos_hint: {'center_y': 0.5}
         background_normal: ''
-        background_color: 0.8, 0.2, 0.2, 1 # สีแดง
+        background_color: 0.8, 0.2, 0.2, 1
         color: 1, 1, 1, 1
         font_size: '12sp'
         font_name: app.font_name
-        # เมื่อกด ให้เรียกฟังก์ชัน callback ที่เราจะเขียนใน Python
         on_release: if hasattr(root, 'delete_callback') and root.delete_callback: root.delete_callback()
 
 <MySettingItem@BoxLayout>:
@@ -86,7 +81,7 @@ ScreenManager:
 <HomeScreen>:
     canvas.before:
         Color:
-            rgba: app.col_bg # พื้นหลังเปลี่ยนตามธีม
+            rgba: app.col_bg
         Rectangle:
             pos: self.pos
             size: self.size
@@ -131,7 +126,6 @@ ScreenManager:
                 font_name: app.font_name
                 on_text: root.refresh()
 
-        # ส่วนแสดงยอดเงิน
         GridLayout:
             cols: 3
             size_hint_y: None
@@ -183,7 +177,6 @@ ScreenManager:
                     color: app.col_text
                     font_name: app.font_name
 
-        # ปุ่มเมนู
         Button:
             text: app.txt_menu_home
             size_hint_y: None
@@ -224,7 +217,6 @@ ScreenManager:
             color: app.col_text
             font_name: app.font_name
 
-        # รายการธุรกรรม
         ScrollView:
             do_scroll_x: False
             GridLayout:
@@ -276,11 +268,10 @@ ScreenManager:
             background_color: app.col_input_bg
             font_name: app.font_name
 
-        # --- แก้ไข Spinner ตรงนี้ ---
         Spinner:
             id: type_spinner
-            text: app.type_values[0] if app.type_values else "" # ให้เลือกตัวแรกของภาษาปัจจุบันอัตโนมัติ
-            values: app.type_values  # ใช้ตัวแปรจาก App
+            text: app.type_values[0] if app.type_values else ""
+            values: app.type_values
             size_hint_y: None
             height: dp(40)
             background_normal: ''
@@ -290,15 +281,14 @@ ScreenManager:
 
         Spinner:
             id: category_spinner
-            text: app.category_values[0] if app.category_values else "" # ให้เลือกตัวแรกของภาษาปัจจุบันอัตโนมัติ
-            values: app.category_values # ใช้ตัวแปรจาก App
+            text: app.category_values[0] if app.category_values else ""
+            values: app.category_values
             size_hint_y: None
             height: dp(40)
             background_normal: ''
             background_color: app.col_card
             color: app.col_text
             font_name: app.font_name
-        # ------------------------
 
         TextInput:
             id: date_input
@@ -485,7 +475,6 @@ ScreenManager:
                 padding: dp(20)
                 spacing: dp(20)
 
-                # --- Language & Theme ---
                 Label:
                     text: app.txt_appearance
                     color: app.col_subtext
@@ -528,7 +517,6 @@ ScreenManager:
                         background_color: hex('#2979FF')
                         on_release: app.switch_theme()
 
-                # --- General ---
                 Label:
                     text: app.txt_general
                     color: app.col_subtext
@@ -550,14 +538,15 @@ ScreenManager:
                     Spinner:
                         id: currency_spinner
                         text: "THB (฿)"
-                        values: ["THB (฿)", "USD ($)", "EUR (€)"]
+                        values: ["THB (฿)", "USD ($)", "EUR (€)", "JPY (¥)"]
                         size_hint_x: None
                         width: dp(100)
                         background_normal: ''
                         background_color: app.col_card
                         color: app.col_text
+                        font_name: app.font_name
+                        on_text: app.change_currency(self.text)
 
-                # --- Data Management ---
                 Label:
                     text: app.txt_data_mgmt
                     color: app.col_subtext
@@ -592,7 +581,7 @@ ScreenManager:
                     height: dp(20)
                 
                 Label:
-                    text: "Version 1.0.0\nDeveloped by CuteGroup"
+                    text: "Version 1.0.0\nDeveloped by Thanarat , Winyou , Nattarunee"
                     color: 0.3, 0.3, 0.3, 1
                     font_size: '12sp'
                     halign: 'center'

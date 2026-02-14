@@ -16,7 +16,7 @@ import csv
 import os
 from kivy.core.image import Image as CoreImage
 
-# ---------- Translations (คงเดิม) ----------
+# ---------- Translations (พจนานุกรมคำแปล) ----------
 TRANSLATIONS = {
     'en': {
         'income': 'Income', 'expense': 'Expense', 'balance': 'Balance',
@@ -46,14 +46,12 @@ TRANSLATIONS = {
     }
 }
 
-# ---------- Custom Widget ----------
 class TransactionItem(BoxLayout):
     text_content = StringProperty("")
     indicator_color = ColorProperty([1, 1, 1, 1])
     text_color = ColorProperty([1, 1, 1, 1])
-    delete_callback = ObjectProperty(None) # เพิ่มตัวรับฟังก์ชันลบ
+    delete_callback = ObjectProperty(None)
 
-# ---------- Database ----------
 def load_data():
     try:
         with open("data.json", "r", encoding="utf-8") as f:
@@ -65,7 +63,6 @@ def save_data(data):
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# ---------- Screens ----------
 class HomeScreen(Screen):
     def on_kv_post(self, base_widget):
         self.load_month_list() 
@@ -88,17 +85,12 @@ class HomeScreen(Screen):
         if "month_filter" in self.ids:
             app = App.get_running_app()
             default_txt = app.txt_all_time if app else "All Time"
-            
             current = self.ids.month_filter.text
             self.ids.month_filter.values = [default_txt] + sorted_months
             if current not in self.ids.month_filter.values:
                 self.ids.month_filter.text = default_txt
 
     def filter_data_with_index(self):
-        """
-        กรองข้อมูลและส่งคืนพร้อม Index เดิมใน Database
-        Return: List of (original_index, item_dict)
-        """
         data = load_data()
         if "month_filter" not in self.ids: 
             return [(i, x) for i, x in enumerate(data)]
@@ -116,18 +108,13 @@ class HomeScreen(Screen):
             parts = d.split('/')
             if len(parts) == 3:
                 if f"{parts[1]}/{parts[2]}" == selected:
-                    filtered.append((i, item)) # เก็บ index เดิมไว้ด้วย
+                    filtered.append((i, item))
         return filtered
 
     def refresh(self, *args):
-        # ดึงข้อมูลพร้อม index
         indexed_data = self.filter_data_with_index()
-        
-        # แยกเฉพาะ data ไปคำนวณยอด
         only_data = [x[1] for x in indexed_data]
         self.update_summary(only_data)
-        
-        # ส่งข้อมูลพร้อม index ไปแสดงผล (เพื่อใข้ลบ)
         self.display_transactions(indexed_data)
 
     def update_summary(self, data):
@@ -135,9 +122,15 @@ class HomeScreen(Screen):
         expense = sum(item["amount"] for item in data if item.get("type") == "expense")
         balance = income - expense
 
-        if "income_label" in self.ids: self.ids.income_label.text = f"{income:,.2f}"
-        if "expense_label" in self.ids: self.ids.expense_label.text = f"{expense:,.2f}"
-        if "balance_label" in self.ids: self.ids.balance_label.text = f"{balance:,.2f}"
+        app = App.get_running_app()
+        sym = app.currency_symbol
+
+        if "income_label" in self.ids: 
+            self.ids.income_label.text = f"{sym} {income:,.2f}"
+        if "expense_label" in self.ids: 
+            self.ids.expense_label.text = f"{sym} {expense:,.2f}"
+        if "balance_label" in self.ids: 
+            self.ids.balance_label.text = f"{sym} {balance:,.2f}"
 
     def display_transactions(self, indexed_data):
         container = self.ids.get("transaction_list")
@@ -145,8 +138,8 @@ class HomeScreen(Screen):
 
         container.clear_widgets()
         app = App.get_running_app()
+        sym = app.currency_symbol
         
-        # วนลูปแสดงผล (กลับด้านเพื่อให้ตัวล่าสุดอยู่บน)
         for index, (real_index, item) in enumerate(reversed(indexed_data)):
             note = item.get('note', '')
             date = item.get('date', '')
@@ -161,12 +154,10 @@ class HomeScreen(Screen):
                 color = get_color_from_hex('#FF5252')
                 sign = "-"
             
-            # จัดรูปแบบข้อความ
-            full_text = f"{date} | {category} | {sign}{amount:,.2f}"
+            full_text = f"{date} | {category} | {sign} {sym}{amount:,.2f}"
             if note:
                 full_text += f"\n{note}"
 
-            # สร้าง Widget รายการ พร้อมส่งฟังก์ชันลบที่ระบุ index ถูกต้อง
             item_widget = TransactionItem(
                 text_content=full_text,
                 indicator_color=color,
@@ -176,13 +167,11 @@ class HomeScreen(Screen):
             container.add_widget(item_widget)
 
     def delete_transaction(self, index):
-        """ลบรายการตาม Index ใน Database"""
         data = load_data()
         if 0 <= index < len(data):
-            print(f"Deleting item at index {index}")
-            data.pop(index) # ลบข้อมูล
-            save_data(data) # บันทึกไฟล์
-            self.refresh()  # รีเฟรชหน้าจอ
+            data.pop(index)
+            save_data(data)
+            self.refresh()
 
 class AddScreen(Screen):
     def save_transaction(self):
@@ -255,10 +244,15 @@ class ReportScreen(Screen):
         income = sum(item["amount"] for item in filtered if item.get("type") == "income")
         expense = sum(item["amount"] for item in filtered if item.get("type") == "expense")
         balance = income - expense
-        if "report_income" in self.ids: self.ids.report_income.text = f"{income:,.2f}"
-        if "report_expense" in self.ids: self.ids.report_expense.text = f"{expense:,.2f}"
-        if "report_balance" in self.ids: self.ids.report_balance.text = f"{balance:,.2f}"
+        
+        app = App.get_running_app()
+        sym = app.currency_symbol
+
+        if "report_income" in self.ids: self.ids.report_income.text = f"{sym} {income:,.2f}"
+        if "report_expense" in self.ids: self.ids.report_expense.text = f"{sym} {expense:,.2f}"
+        if "report_balance" in self.ids: self.ids.report_balance.text = f"{sym} {balance:,.2f}"
         self.generate_chart(income, expense)
+        
     def generate_chart(self, income, expense):
         app = App.get_running_app()
         bg_hex = '#121212' if app.is_dark_mode else '#F5F5F5'
@@ -354,11 +348,19 @@ class ExpenseApp(App):
 
     type_values = ListProperty([])
     category_values = ListProperty([])
+    currency_symbol = StringProperty("฿")
 
     def build(self):
         self.update_language_texts()
         self.update_theme_colors()
         pass
+
+    def change_currency(self, value):
+        if "(" in value and ")" in value:
+            symbol = value.split("(")[1].strip(")")
+            self.currency_symbol = symbol
+            if self.root and self.root.get_screen('home'):
+                self.root.get_screen('home').refresh()
 
     def switch_language(self):
         self.current_lang = 'th' if self.current_lang == 'en' else 'en'
