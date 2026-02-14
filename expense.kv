@@ -1,6 +1,7 @@
 #:import dp kivy.metrics.dp
 #:import hex kivy.utils.get_color_from_hex
 
+# --- แก้ไขส่วนนี้ในไฟล์ expense.kv ---
 <TransactionItem@BoxLayout>:
     canvas.before:
         Color:
@@ -11,8 +12,9 @@
     size_hint_y: None
     height: dp(60)
     padding: dp(15), 0
-    spacing: dp(15)
+    spacing: dp(10)
 
+    # 1. ไอคอนสี
     Widget:
         size_hint: None, None
         size: dp(10), dp(10)
@@ -24,14 +26,30 @@
                 pos: self.pos
                 size: self.size
 
+    # 2. ข้อความรายการ (ให้ยืดขยายเต็มพื้นที่ที่เหลือ)
     Label:
         text: root.text_content if hasattr(root, 'text_content') else ""
         font_size: '14sp'
-        color: app.col_text # ใช้สีจาก App
+        color: app.col_text
         text_size: self.width, None
+        size_hint_x: 1  # ยืดกินพื้นที่
         halign: 'left'
         valign: 'middle'
-        font_name: app.font_name # ใช้ฟอนต์จาก App
+        font_name: app.font_name
+
+    # 3. ปุ่มลบ (เพิ่มใหม่)
+    Button:
+        text: "Del" # หรือจะใช้คำว่า "ลบ"
+        size_hint: None, None
+        size: dp(50), dp(30)
+        pos_hint: {'center_y': 0.5}
+        background_normal: ''
+        background_color: 0.8, 0.2, 0.2, 1 # สีแดง
+        color: 1, 1, 1, 1
+        font_size: '12sp'
+        font_name: app.font_name
+        # เมื่อกด ให้เรียกฟังก์ชัน callback ที่เราจะเขียนใน Python
+        on_release: if hasattr(root, 'delete_callback') and root.delete_callback: root.delete_callback()
 
 <MySettingItem@BoxLayout>:
     canvas.before:

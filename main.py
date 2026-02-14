@@ -6,7 +6,7 @@ from kivy.metrics import dp
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
-from kivy.properties import ColorProperty, StringProperty, ListProperty
+from kivy.properties import ColorProperty, StringProperty, ListProperty, ObjectProperty
 from kivy.utils import get_color_from_hex
 import json
 from datetime import datetime
@@ -16,7 +16,7 @@ import csv
 import os
 from kivy.core.image import Image as CoreImage
 
-# ---------- Translations (พจนานุกรมคำแปล) ----------
+# ---------- Translations (คงเดิม) ----------
 TRANSLATIONS = {
     'en': {
         'income': 'Income', 'expense': 'Expense', 'balance': 'Balance',
@@ -28,7 +28,6 @@ TRANSLATIONS = {
         'setting_title': 'Settings', 'general': 'GENERAL', 'currency': 'Currency',
         'data_mgmt': 'DATA MANAGEMENT', 'btn_export': 'Export to CSV', 'btn_clear': 'Clear All Data',
         'appearance': 'APPEARANCE', 'language': 'LANGUAGE', 'theme_dark': 'Dark Mode', 'theme_light': 'Light Mode',
-        # หมวดหมู่และประเภท
         'cat_general': 'General', 'cat_food': 'Food', 'cat_travel': 'Travel', 'cat_study': 'Study', 'cat_other': 'Other',
         'type_income': 'Income', 'type_expense': 'Expense'
     },
@@ -42,17 +41,19 @@ TRANSLATIONS = {
         'setting_title': 'การตั้งค่า', 'general': 'ทั่วไป', 'currency': 'สกุลเงิน',
         'data_mgmt': 'จัดการข้อมูล', 'btn_export': 'ส่งออกเป็น CSV', 'btn_clear': 'ล้างข้อมูลทั้งหมด',
         'appearance': 'รูปลักษณ์', 'language': 'ภาษา', 'theme_dark': 'โหมดมืด', 'theme_light': 'โหมดสว่าง',
-        # หมวดหมู่และประเภท (ภาษาไทย)
         'cat_general': 'ทั่วไป', 'cat_food': 'อาหาร', 'cat_travel': 'เดินทาง', 'cat_study': 'การเรียน', 'cat_other': 'อื่นๆ',
         'type_income': 'รายรับ', 'type_expense': 'รายจ่าย'
     }
 }
 
+# ---------- Custom Widget ----------
 class TransactionItem(BoxLayout):
     text_content = StringProperty("")
     indicator_color = ColorProperty([1, 1, 1, 1])
     text_color = ColorProperty([1, 1, 1, 1])
+    delete_callback = ObjectProperty(None) # เพิ่มตัวรับฟังก์ชันลบ
 
+# ---------- Database ----------
 def load_data():
     try:
         with open("data.json", "r", encoding="utf-8") as f:
@@ -64,6 +65,7 @@ def save_data(data):
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+# ---------- Screens ----------
 class HomeScreen(Screen):
     def on_kv_post(self, base_widget):
         self.load_month_list() 
@@ -82,53 +84,70 @@ class HomeScreen(Screen):
             if len(parts) == 3:
                 months.add(f"{parts[1]}/{parts[2]}")
         sorted_months = sorted(list(months), reverse=True)
+        
         if "month_filter" in self.ids:
             app = App.get_running_app()
             default_txt = app.txt_all_time if app else "All Time"
+            
             current = self.ids.month_filter.text
             self.ids.month_filter.values = [default_txt] + sorted_months
             if current not in self.ids.month_filter.values:
                 self.ids.month_filter.text = default_txt
 
-    def filter_data_by_month(self):
+    def filter_data_with_index(self):
+        """
+        กรองข้อมูลและส่งคืนพร้อม Index เดิมใน Database
+        Return: List of (original_index, item_dict)
+        """
         data = load_data()
-        if "month_filter" not in self.ids: return data
+        if "month_filter" not in self.ids: 
+            return [(i, x) for i, x in enumerate(data)]
+        
         app = App.get_running_app()
         default_txt = app.txt_all_time if app else "All Time"
         selected = self.ids.month_filter.text
-        if selected == default_txt: return data
+        
+        if selected == default_txt:
+            return [(i, x) for i, x in enumerate(data)]
+            
         filtered = []
-        for item in data:
+        for i, item in enumerate(data):
             d = item.get("date", "")
             parts = d.split('/')
             if len(parts) == 3:
                 if f"{parts[1]}/{parts[2]}" == selected:
-                    filtered.append(item)
+                    filtered.append((i, item)) # เก็บ index เดิมไว้ด้วย
         return filtered
 
     def refresh(self, *args):
-        filtered_data = self.filter_data_by_month()
-        self.update_summary(filtered_data)
-        self.display_transactions(filtered_data)
+        # ดึงข้อมูลพร้อม index
+        indexed_data = self.filter_data_with_index()
+        
+        # แยกเฉพาะ data ไปคำนวณยอด
+        only_data = [x[1] for x in indexed_data]
+        self.update_summary(only_data)
+        
+        # ส่งข้อมูลพร้อม index ไปแสดงผล (เพื่อใข้ลบ)
+        self.display_transactions(indexed_data)
 
     def update_summary(self, data):
         income = sum(item["amount"] for item in data if item.get("type") == "income")
         expense = sum(item["amount"] for item in data if item.get("type") == "expense")
         balance = income - expense
+
         if "income_label" in self.ids: self.ids.income_label.text = f"{income:,.2f}"
         if "expense_label" in self.ids: self.ids.expense_label.text = f"{expense:,.2f}"
         if "balance_label" in self.ids: self.ids.balance_label.text = f"{balance:,.2f}"
 
-    def display_transactions(self, data):
+    def display_transactions(self, indexed_data):
         container = self.ids.get("transaction_list")
         if not container: return
+
         container.clear_widgets()
         app = App.get_running_app()
         
-        # Mapping สำหรับแสดงผลย้อนกลับเป็นภาษาปัจจุบัน (ถ้าจำเป็น)
-        # แต่ปกติข้อมูลประวัติจะโชว์ตามที่บันทึกไว้
-        
-        for index, item in enumerate(reversed(data)):
+        # วนลูปแสดงผล (กลับด้านเพื่อให้ตัวล่าสุดอยู่บน)
+        for index, (real_index, item) in enumerate(reversed(indexed_data)):
             note = item.get('note', '')
             date = item.get('date', '')
             t_type = item.get('type', '')
@@ -142,20 +161,33 @@ class HomeScreen(Screen):
                 color = get_color_from_hex('#FF5252')
                 sign = "-"
             
-            full_text = f"{date} | {category} | {sign}{amount:,.2f}\n{note}"
+            # จัดรูปแบบข้อความ
+            full_text = f"{date} | {category} | {sign}{amount:,.2f}"
+            if note:
+                full_text += f"\n{note}"
 
+            # สร้าง Widget รายการ พร้อมส่งฟังก์ชันลบที่ระบุ index ถูกต้อง
             item_widget = TransactionItem(
                 text_content=full_text,
                 indicator_color=color,
-                text_color=app.col_text
+                text_color=app.col_text,
+                delete_callback=lambda idx=real_index: self.delete_transaction(idx)
             )
             container.add_widget(item_widget)
+
+    def delete_transaction(self, index):
+        """ลบรายการตาม Index ใน Database"""
+        data = load_data()
+        if 0 <= index < len(data):
+            print(f"Deleting item at index {index}")
+            data.pop(index) # ลบข้อมูล
+            save_data(data) # บันทึกไฟล์
+            self.refresh()  # รีเฟรชหน้าจอ
 
 class AddScreen(Screen):
     def save_transaction(self):
         amount_text = self.ids.amount_input.text.strip()
         note = self.ids.note_input.text.strip()
-        # ดึงค่าจาก Spinner (อาจเป็นไทยหรืออังกฤษก็ได้)
         t_type_raw = self.ids.type_spinner.text.strip()
         category = self.ids.category_spinner.text.strip()
         date_text = self.ids.date_input.text.strip()
@@ -168,11 +200,10 @@ class AddScreen(Screen):
         if not date_text:
             date_text = datetime.now().strftime("%d/%m/%Y")
         
-        # แปลง Type กลับเป็นคีย์มาตรฐาน (income/expense) เพื่อให้คำนวณถูก
         app = App.get_running_app()
         t = TRANSLATIONS[app.current_lang]
         
-        final_type = "expense" # default
+        final_type = "expense"
         if t_type_raw == t['type_income'] or t_type_raw == "Income":
             final_type = "income"
         
@@ -181,7 +212,7 @@ class AddScreen(Screen):
             "amount": amount,
             "note": note,
             "type": final_type,
-            "category": category, # บันทึกตามภาษาที่เลือกตอนนั้น
+            "category": category,
             "date": date_text
         })
         save_data(data)
@@ -294,7 +325,6 @@ class ExpenseApp(App):
     current_lang = 'en'
     font_name = StringProperty("Roboto")
     
-    # รายการข้อความต่างๆ
     txt_income = StringProperty("Income")
     txt_expense = StringProperty("Expense")
     txt_balance = StringProperty("Balance")
@@ -322,9 +352,8 @@ class ExpenseApp(App):
     txt_language = StringProperty("LANGUAGE")
     txt_theme_mode = StringProperty("Dark Mode")
 
-    # --- เพิ่ม: ลิสต์สำหรับ Spinner ---
-    type_values = ListProperty([])      # เก็บค่า Income/Expense ตามภาษา
-    category_values = ListProperty([])  # เก็บค่า General/Food... ตามภาษา
+    type_values = ListProperty([])
+    category_values = ListProperty([])
 
     def build(self):
         self.update_language_texts()
@@ -339,7 +368,6 @@ class ExpenseApp(App):
 
     def update_language_texts(self):
         t = TRANSLATIONS[self.current_lang]
-        # อัปเดตข้อความทั่วไป
         self.txt_income = t['income']; self.txt_expense = t['expense']; self.txt_balance = t['balance']
         self.txt_transactions = t['transactions']; self.txt_select_month = t['select_month']; self.txt_all_time = t['all_time']
         self.txt_menu_home = t['menu_home']; self.txt_menu_report = t['menu_report']; self.txt_menu_settings = t['menu_settings']
@@ -351,7 +379,6 @@ class ExpenseApp(App):
         self.txt_appearance = t['appearance']; self.txt_language = t['language']
         self.txt_theme_mode = t['theme_light'] if self.is_dark_mode else t['theme_dark']
 
-        # --- อัปเดตรายการใน Spinner ---
         self.type_values = [t['type_income'], t['type_expense']]
         self.category_values = [
             t['cat_general'], t['cat_food'], t['cat_travel'], 
