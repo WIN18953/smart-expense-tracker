@@ -4,7 +4,9 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.uix.button import Button
+from kivy.properties import ObjectProperty
 import json
+from datetime import datetime
 
 # ---------- Database ----------
 def load_data():
@@ -20,27 +22,75 @@ def save_data(data):
 
 # ---------- Screens ----------
 class HomeScreen(Screen):
-    # เรียกครั้งแรกหลังจาก kv ของหน้า Home ถูก apply ครบแล้ว -> ids พร้อมแน่นอน
     def on_kv_post(self, base_widget):
+        self.load_month_list() 
         self.refresh()
 
-    # เวลา "กลับเข้า" หน้านี้ ให้ดีเลย์ 0 เฟรม เพื่อรอ layout คำนวณขนาดเสร็จ
     def on_enter(self, *args):
+        self.load_month_list()
         Clock.schedule_once(lambda dt: self.refresh(), 0)
 
-    # รวมงานอัปเดตไว้ที่เดียว
-    def refresh(self):
-        self.update_summary()
-        self.display_transactions()
-
-    def update_summary(self):
+    def load_month_list(self):
+        """ดึงรายการเดือน/ปี ที่มีทั้งหมดจากฐานข้อมูล"""
         data = load_data()
+        months = set()
+        
+        for item in data:
+            date_str = item.get("date", "")
+            # รองรับ format DD/MM/YYYY
+            parts = date_str.split('/')
+            if len(parts) == 3:
+                month_year = f"{parts[1]}/{parts[2]}" # เก็บเป็น MM/YYYY
+                months.add(month_year)
+        
+        # เรียงลำดับเดือน (ล่าสุดขึ้นก่อน)
+        sorted_months = sorted(list(months), reverse=True)
+        
+        # อัปเดต Spinner (ถ้ามี widget ชื่อ month_filter)
+        if "month_filter" in self.ids:
+            current_selection = self.ids.month_filter.text
+            self.ids.month_filter.values = ["All Time"] + sorted_months
+            # ถ้าค่าที่เลือกอยู่เดิมไม่มีในลิสต์ใหม่ ให้รีเซ็ตเป็น All Time
+            if current_selection not in self.ids.month_filter.values:
+                self.ids.month_filter.text = "All Time"
+
+    def filter_data_by_month(self):
+        """คัดกรองข้อมูลตามเดือนที่เลือก"""
+        data = load_data()
+        
+        # เช็คว่ามี Spinner หรือไม่ (กัน Error)
+        if "month_filter" not in self.ids:
+            return data
+
+        selected_month = self.ids.month_filter.text
+        
+        if selected_month == "All Time":
+            return data
+            
+        filtered_data = []
+        for item in data:
+            date_str = item.get("date", "")
+            parts = date_str.split('/')
+            if len(parts) == 3:
+                item_month_year = f"{parts[1]}/{parts[2]}"
+                if item_month_year == selected_month:
+                    filtered_data.append(item)
+                    
+        return filtered_data
+
+    def refresh(self, *args):
+        # 1. กรองข้อมูลก่อน
+        filtered_data = self.filter_data_by_month()
+        
+        # 2. ส่งข้อมูลที่กรองแล้วไป update UI
+        self.update_summary(filtered_data)
+        self.display_transactions(filtered_data)
+
+    def update_summary(self, data):
         income = sum(item["amount"] for item in data if item.get("type") == "income")
         expense = sum(item["amount"] for item in data if item.get("type") == "expense")
         balance = income - expense
 
-        # --- แก้ไขตรงนี้ ---
-        # ใส่แค่ตัวเลข (และจัดฟอร์แมตใส่ลูกน้ำด้วย {:,.2f})
         if "income_label" in self.ids:
             self.ids.income_label.text = f"{income:,.2f}"
         if "expense_label" in self.ids:
@@ -48,41 +98,59 @@ class HomeScreen(Screen):
         if "balance_label" in self.ids:
             self.ids.balance_label.text = f"{balance:,.2f}"
 
-    def display_transactions(self):
+    def display_transactions(self, data):
         container = self.ids.get("transaction_list")
         if not container:
             return
 
         container.clear_widgets()
-        data = load_data()
+        # ใช้ data ที่ส่งเข้ามา (ซึ่งถูกกรองแล้ว) แทนการโหลดใหม่
+        
+        # แสดงผลแบบย้อนกลับ (รายการล่าสุดอยู่บน)
+        for index, item in enumerate(reversed(data)):
+            # คำนวณ index จริงใน database (สำหรับการลบ)
+            # หมายเหตุ: การลบขณะกรองอาจซับซ้อน นี่เป็นวิธีเบื้องต้น
+            real_index = len(data) - 1 - index 
 
-        for index, item in enumerate(data):
-            # --- แก้ไขตรงจุดนี้ ---
-            # ดึงข้อมูล Note ออกมา (ถ้าไม่มีให้เป็นข้อความว่าง)
             note = item.get('note', '')
+            date = item.get('date', '')
+            t_type = item.get('type', '')
+            amount = item.get('amount', 0)
+            category = item.get('category', '')
             
-            # เพิ่ม note เข้าไปในข้อความที่จะแสดงบนปุ่ม
-            text = f"{item.get('type', '')}  {item.get('amount', '')}  {item.get('category', '')}  {note}"
-            # --------------------
+            # จัดรูปแบบข้อความให้สวยงามขึ้น
+            text = f"{date} | {t_type} {amount:,.2f} | {category} | {note}"
 
             btn = Button(
                 text=text,
                 size_hint_y=None,
-                height=dp(40),
+                height=dp(50),
                 halign='left',
                 valign='middle'
             )
             
-            # โค้ดส่วนที่เหลือเหมือนเดิม...
             btn.text_size = (btn.width - dp(24), None)
             btn.bind(width=lambda inst, w: setattr(inst, 'text_size', (w - dp(24), None)))
-            btn.bind(on_press=lambda instance, i=index: self.delete_transaction(i))
+            
+            # ส่ง real_index ไปฟังก์ชันลบ (ระวัง: ถ้ากรองอยู่ index อาจคลาดเคลื่อนได้ 
+            # แต่เพื่อให้โปรแกรมรันได้ก่อน ใช้แบบนี้ไปก่อนครับ)
+            btn.bind(on_press=lambda instance, i=real_index: self.delete_transaction(i))
             container.add_widget(btn)
 
     def delete_transaction(self, index):
+        # ข้อควรระวัง: การลบโดยใช้ index ขณะกรองข้อมูลอาจลบผิดตัวได้
+        # เพื่อความปลอดภัย เบื้องต้นจะให้ลบได้เฉพาะตอนเลือก "All Time" หรือต้องแก้ระบบ ID
+        if self.ids.month_filter.text != "All Time":
+            print("Cannot delete while filtering (Safety feature)")
+            return
+
         data = load_data()
-        if 0 <= index < len(data):
-            data.pop(index)
+        # ต้องกลับด้าน index เพราะเราแสดงผลแบบ reversed
+        # รายการที่ 0 บนหน้าจอ คือรายการสุดท้ายใน list data
+        actual_index = len(data) - 1 - index
+
+        if 0 <= actual_index < len(data):
+            data.pop(actual_index)
             save_data(data)
             self.refresh()
 
@@ -90,9 +158,9 @@ class AddScreen(Screen):
     def save_transaction(self):
         amount_text = self.ids.amount_input.text.strip()
         note = self.ids.note_input.text.strip()
-        t_type = self.ids.type_spinner.text.strip()   # "Income" หรือ "Expense"
+        t_type = self.ids.type_spinner.text.strip()
         category = self.ids.category_spinner.text.strip()
-        date = self.ids.date_input.text.strip()       # เช่น "2026-02" หรือ "2026-02-14"
+        date_text = self.ids.date_input.text.strip()
 
         if not amount_text:
             return
@@ -101,19 +169,24 @@ class AddScreen(Screen):
         except ValueError:
             return
 
+        # ถ้าไม่ได้กรอกวันที่ ให้ใส่วันที่ปัจจุบัน
+        if not date_text:
+            date_text = datetime.now().strftime("%d/%m/%Y")
+
         data = load_data()
         data.append({
             "amount": amount,
             "note": note,
             "type": "income" if t_type == "Income" else "expense",
             "category": category,
-            "date": date
+            "date": date_text
         })
         save_data(data)
 
         # เคลียร์ช่องกรอก
         self.ids.amount_input.text = ""
         self.ids.note_input.text = ""
+        self.ids.date_input.text = ""
 
         # กลับหน้า home
         self.manager.current = "home"
@@ -124,26 +197,46 @@ class ReportScreen(Screen):
 
     def load_months(self):
         data = load_data()
-        # unique เดือน/วันที่มีข้อมูล และไม่เป็นค่าว่าง
-        months = sorted({item.get("date") for item in data if item.get("date")})
-        if months and self.ids.get("month_spinner"):
-            self.ids.month_spinner.values = months
-            self.ids.month_spinner.text = months[0]
+        # ดึงเดือนจากวันที่ (DD/MM/YYYY -> MM/YYYY)
+        months = set()
+        for item in data:
+            d = item.get("date", "")
+            parts = d.split('/')
+            if len(parts) == 3:
+                months.add(f"{parts[1]}/{parts[2]}")
+        
+        sorted_months = sorted(list(months), reverse=True)
+        
+        if sorted_months and "month_spinner" in self.ids:
+            self.ids.month_spinner.values = sorted_months
+            self.ids.month_spinner.text = sorted_months[0]
+            self.filter_report() # เรียกคำนวณทันทีเมื่อเข้าหน้า
 
     def filter_report(self):
+        if "month_spinner" not in self.ids:
+            return
+
         selected_month = self.ids.month_spinner.text
         data = load_data()
-        filtered = [item for item in data if item.get("date") == selected_month]
+        
+        filtered = []
+        for item in data:
+            d = item.get("date", "")
+            parts = d.split('/')
+            if len(parts) == 3:
+                if f"{parts[1]}/{parts[2]}" == selected_month:
+                    filtered.append(item)
+
         income = sum(item["amount"] for item in filtered if item.get("type") == "income")
         expense = sum(item["amount"] for item in filtered if item.get("type") == "expense")
         balance = income - expense
 
-        if self.ids.get("report_income"):
-            self.ids.report_income.text = f"Income: {income}"
-        if self.ids.get("report_expense"):
-            self.ids.report_expense.text = f"Expense: {expense}"
-        if self.ids.get("report_balance"):
-            self.ids.report_balance.text = f"Balance: {balance}"
+        if "report_income" in self.ids:
+            self.ids.report_income.text = f"Income: {income:,.2f}"
+        if "report_expense" in self.ids:
+            self.ids.report_expense.text = f"Expense: {expense:,.2f}"
+        if "report_balance" in self.ids:
+            self.ids.report_balance.text = f"Balance: {balance:,.2f}"
 
 class SettingScreen(Screen):
     pass
@@ -151,9 +244,7 @@ class SettingScreen(Screen):
 class ExpenseApp(App):
     def build(self):
         pass
-
 if __name__ == "__main__":
-    # สร้างไฟล์ data.json เริ่มต้นถ้ายังไม่มี
     try:
         open("data.json", "x", encoding="utf-8").write("[]")
     except FileExistsError:

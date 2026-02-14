@@ -32,7 +32,28 @@ ScreenManager:
             height: dp(60)
             halign: 'center'
             valign: 'middle'
+            
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(10)
+            
+            Label:
+                text: "Select Month:"
+                size_hint_x: None
+                width: dp(100)
+                color: 0.5, 0.5, 0.5, 1 # สีเทา
+                valign: 'middle'
 
+            Spinner:
+                id: month_filter
+                text: "All Time"
+                values: ["All Time"]
+                size_hint_y: None
+                height: dp(40)
+                background_normal: ''
+                background_color: 0.2, 0.2, 0.2, 1
+                on_text: root.refresh() # เมื่อเปลี่ยนเดือน ให้รีเฟรชหน้าจอใหม่
         # ส่วนแสดงยอดเงิน (GridLayout 3 ช่อง)
         GridLayout:
             cols: 3
