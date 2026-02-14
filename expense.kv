@@ -1,3 +1,14 @@
+#:import dp kivy.metrics.dp
+
+# ประกาศ SummaryLabel ไว้ด้านบนสุดเพื่อใช้ในหน้า Report
+<SummaryLabel@Label>:
+    size_hint_y: None
+    height: dp(40)
+    text_size: self.width, None
+    halign: 'center'
+    valign: 'middle'
+    font_size: '16sp'
+
 ScreenManager:
     HomeScreen:
         name: "home"
@@ -8,140 +19,227 @@ ScreenManager:
     SettingScreen:
         name: "setting"
 
-
 <HomeScreen>:
     BoxLayout:
         orientation: "vertical"
-        padding: 20
-        spacing: 10
+        padding: dp(16)
+        spacing: dp(12)
 
         Label:
             text: "Smart Expense Tracker"
             font_size: 28
+            size_hint_y: None
+            height: dp(60)
+            halign: 'center'
+            valign: 'middle'
 
-        Label:
-            id: income_label
-            text: "Income: 0"
+        # ส่วนแสดงยอดเงิน (GridLayout 3 ช่อง)
+        GridLayout:
+            cols: 3
+            size_hint_y: None
+            height: dp(80)
+            spacing: dp(10)
+            
+            # การ์ด Income
+            BoxLayout:
+                orientation: "vertical"
+                Label:
+                    text: "Income"
+                    color: 0, 1, 0, 1
+                    font_size: '14sp'
+                Label:
+                    id: income_label
+                    text: "0"
+                    font_size: '18sp'
+                    bold: True
 
-        Label:
-            id: expense_label
-            text: "Expense: 0"
+            # การ์ด Expense
+            BoxLayout:
+                orientation: "vertical"
+                Label:
+                    text: "Expense"
+                    color: 1, 0, 0, 1
+                    font_size: '14sp'
+                Label:
+                    id: expense_label
+                    text: "0"
+                    font_size: '18sp'
+                    bold: True
 
-        Label:
-            id: balance_label
-            text: "Balance: 0"
+            # การ์ด Balance
+            BoxLayout:
+                orientation: "vertical"
+                Label:
+                    text: "Balance"
+                    color: 0.2, 0.6, 1, 1
+                    font_size: '14sp'
+                Label:
+                    id: balance_label
+                    text: "0"
+                    font_size: '18sp'
+                    bold: True
 
+        # ปุ่มเมนู
         Button:
             text: "Add Transaction"
+            size_hint_y: None
+            height: dp(48)
             on_press: root.manager.current = "add"
 
         Button:
             text: "View Report"
+            size_hint_y: None
+            height: dp(48)
             on_press: root.manager.current = "report"
 
         Button:
             text: "Settings"
+            size_hint_y: None
+            height: dp(48)
             on_press: root.manager.current = "setting"
 
+        # หัวข้อรายการ
         Label:
             text: "Transactions:"
+            size_hint_y: None
+            height: dp(40)
+            text_size: self.width, None
+            halign: 'center'
+            valign: 'middle'
 
+        # รายการธุรกรรม
         ScrollView:
+            do_scroll_x: False
             GridLayout:
                 id: transaction_list
                 cols: 1
                 size_hint_y: None
                 height: self.minimum_height
-                spacing: 5
-
-
+                spacing: dp(8)
+                padding: dp(8)
 
 <AddScreen>:
     BoxLayout:
         orientation: "vertical"
-        padding: 20
-        spacing: 10
+        padding: dp(16)
+        spacing: dp(12)
 
         Label:
             text: "Add Transaction"
             font_size: 24
+            size_hint_y: None
+            height: dp(50)
+            halign: 'center'
+            valign: 'middle'
 
         TextInput:
             id: amount_input
             hint_text: "Amount"
             input_filter: "float"
+            multiline: False
+            size_hint_y: None
+            height: dp(40)
 
         TextInput:
             id: note_input
             hint_text: "Note"
+            multiline: False
+            size_hint_y: None
+            height: dp(40)
 
         Spinner:
             id: type_spinner
             text: "Income"
             values: ["Income", "Expense"]
+            size_hint_y: None
+            height: dp(40)
 
         Spinner:
             id: category_spinner
             text: "General"
             values: ["General", "Food", "Travel", "Study", "Other"]
+            size_hint_y: None
+            height: dp(40)
 
         TextInput:
             id: date_input
-            hint_text: "Date (YYYY-MM)"
+            hint_text: "Date (DD/MM/YYYY)"
+            multiline: False
+            size_hint_y: None
+            height: dp(40)
 
-        Button:
-            text: "Save"
-            on_press: root.save_transaction()
-
-        Button:
-            text: "Cancel"
-            on_press: root.manager.current = "home"
-
-
+        BoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            spacing: dp(12)
+            Button:
+                text: "Save"
+                on_press: root.save_transaction()
+            Button:
+                text: "Cancel"
+                on_press: root.manager.current = "home"
 
 <ReportScreen>:
     BoxLayout:
         orientation: "vertical"
-        padding: 20
-        spacing: 10
+        padding: dp(16)
+        spacing: dp(12)
 
         Label:
             text: "Monthly Report"
             font_size: 24
+            size_hint_y: None
+            height: dp(50)
+            halign: 'center'
+            valign: 'middle'
 
         Spinner:
             id: month_spinner
             text: "Select Month"
             values: []
+            size_hint_y: None
+            height: dp(40)
 
         Button:
             text: "Filter"
+            size_hint_y: None
+            height: dp(44)
             on_press: root.filter_report()
 
-        Label:
+        SummaryLabel:
             id: report_income
             text: "Income: 0"
 
-        Label:
+        SummaryLabel:
             id: report_expense
             text: "Expense: 0"
 
-        Label:
+        SummaryLabel:
             id: report_balance
             text: "Balance: 0"
 
         Button:
             text: "Back"
+            size_hint_y: None
+            height: dp(44)
             on_press: root.manager.current = "home"
-
 
 <SettingScreen>:
     BoxLayout:
         orientation: "vertical"
+        padding: dp(16)
+        spacing: dp(12)
 
         Label:
             text: "Settings"
+            font_size: 20
+            size_hint_y: None
+            height: dp(50)
+            halign: 'center'
+            valign: 'middle'
 
         Button:
             text: "Back"
+            size_hint_y: None
+            height: dp(44)
             on_press: root.manager.current = "home"
