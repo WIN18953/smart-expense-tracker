@@ -57,7 +57,14 @@ class HomeScreen(Screen):
         data = load_data()
 
         for index, item in enumerate(data):
-            text = f"{item.get('type','')}  {item.get('amount','')}  {item.get('category','')}"
+            # --- แก้ไขตรงจุดนี้ ---
+            # ดึงข้อมูล Note ออกมา (ถ้าไม่มีให้เป็นข้อความว่าง)
+            note = item.get('note', '')
+            
+            # เพิ่ม note เข้าไปในข้อความที่จะแสดงบนปุ่ม
+            text = f"{item.get('type', '')}  {item.get('amount', '')}  {item.get('category', '')}  {note}"
+            # --------------------
+
             btn = Button(
                 text=text,
                 size_hint_y=None,
@@ -65,10 +72,10 @@ class HomeScreen(Screen):
                 halign='left',
                 valign='middle'
             )
-            # ให้ข้อความชิดซ้ายและไม่ล้นเมื่อปรับขนาดหน้าต่าง
+            
+            # โค้ดส่วนที่เหลือเหมือนเดิม...
             btn.text_size = (btn.width - dp(24), None)
             btn.bind(width=lambda inst, w: setattr(inst, 'text_size', (w - dp(24), None)))
-
             btn.bind(on_press=lambda instance, i=index: self.delete_transaction(i))
             container.add_widget(btn)
 
