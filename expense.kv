@@ -1,6 +1,56 @@
 #:import dp kivy.metrics.dp
+#:import hex kivy.utils.get_color_from_hex
 
-# ประกาศ SummaryLabel ไว้ด้านบนสุดเพื่อใช้ในหน้า Report
+# --- ส่วนประกอบย่อย (Custom Widgets) ---
+
+# 1. รายการธุรกรรม (Transaction List Item) - เพื่อให้สวยเหมือนในภาพ
+<TransactionItem@BoxLayout>:
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 0.05 # พื้นหลังจางๆ
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    size_hint_y: None
+    height: dp(60)
+    padding: dp(15), 0
+    spacing: dp(15)
+
+    # ไอคอนวงกลม
+    Widget:
+        size_hint: None, None
+        size: dp(10), dp(10)
+        pos_hint: {'center_y': 0.5}
+        canvas:
+            Color:
+                rgba: root.indicator_color if hasattr(root, 'indicator_color') else (1, 1, 1, 1)
+            Ellipse:
+                pos: self.pos
+                size: self.size
+
+    # รายละเอียด
+    Label:
+        text: root.text_content if hasattr(root, 'text_content') else ""
+        font_size: '14sp'
+        color: 1, 1, 1, 1
+        text_size: self.width, None
+        halign: 'left'
+        valign: 'middle'
+
+# 2. หัวข้อในหน้า Setting (เปลี่ยนชื่อเพื่อแก้บั๊ก)
+<MySettingItem@BoxLayout>:
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 0.05
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    size_hint_y: None
+    height: dp(60)
+    padding: dp(20), 0
+    spacing: dp(20)
+
+# 3. ป้ายสรุปยอดเงิน
 <SummaryLabel@Label>:
     size_hint_y: None
     height: dp(40)
@@ -20,6 +70,13 @@ ScreenManager:
         name: "setting"
 
 <HomeScreen>:
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 1 # พื้นหลังดำสนิท
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
     BoxLayout:
         orientation: "vertical"
         padding: dp(16)
@@ -27,7 +84,7 @@ ScreenManager:
 
         Label:
             text: "Smart Expense Tracker"
-            font_size: 28
+            font_size: '24sp'
             size_hint_y: None
             height: dp(60)
             halign: 'center'
@@ -42,7 +99,7 @@ ScreenManager:
                 text: "Select Month:"
                 size_hint_x: None
                 width: dp(100)
-                color: 0.5, 0.5, 0.5, 1 # สีเทา
+                color: 0.5, 0.5, 0.5, 1
                 valign: 'middle'
 
             Spinner:
@@ -53,15 +110,15 @@ ScreenManager:
                 height: dp(40)
                 background_normal: ''
                 background_color: 0.2, 0.2, 0.2, 1
-                on_text: root.refresh() # เมื่อเปลี่ยนเดือน ให้รีเฟรชหน้าจอใหม่
-        # ส่วนแสดงยอดเงิน (GridLayout 3 ช่อง)
+                on_text: root.refresh()
+
+        # ส่วนแสดงยอดเงิน
         GridLayout:
             cols: 3
             size_hint_y: None
             height: dp(80)
             spacing: dp(10)
             
-            # การ์ด Income
             BoxLayout:
                 orientation: "vertical"
                 Label:
@@ -74,7 +131,6 @@ ScreenManager:
                     font_size: '18sp'
                     bold: True
 
-            # การ์ด Expense
             BoxLayout:
                 orientation: "vertical"
                 Label:
@@ -87,7 +143,6 @@ ScreenManager:
                     font_size: '18sp'
                     bold: True
 
-            # การ์ด Balance
             BoxLayout:
                 orientation: "vertical"
                 Label:
@@ -105,21 +160,26 @@ ScreenManager:
             text: "Add Transaction"
             size_hint_y: None
             height: dp(48)
+            background_normal: ''
+            background_color: 0.3, 0.3, 0.3, 1
             on_press: root.manager.current = "add"
 
         Button:
             text: "View Report"
             size_hint_y: None
             height: dp(48)
+            background_normal: ''
+            background_color: 0.3, 0.3, 0.3, 1
             on_press: root.manager.current = "report"
 
         Button:
             text: "Settings"
             size_hint_y: None
             height: dp(48)
+            background_normal: ''
+            background_color: 0.3, 0.3, 0.3, 1
             on_press: root.manager.current = "setting"
 
-        # หัวข้อรายการ
         Label:
             text: "Transactions:"
             size_hint_y: None
@@ -140,6 +200,12 @@ ScreenManager:
                 padding: dp(8)
 
 <AddScreen>:
+    canvas.before:
+        Color:
+            rgba: 0, 0, 0, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
     BoxLayout:
         orientation: "vertical"
         padding: dp(16)
@@ -160,6 +226,7 @@ ScreenManager:
             multiline: False
             size_hint_y: None
             height: dp(40)
+            background_color: 0.9, 0.9, 0.9, 1
 
         TextInput:
             id: note_input
@@ -167,6 +234,7 @@ ScreenManager:
             multiline: False
             size_hint_y: None
             height: dp(40)
+            background_color: 0.9, 0.9, 0.9, 1
 
         Spinner:
             id: type_spinner
@@ -174,6 +242,8 @@ ScreenManager:
             values: ["Income", "Expense"]
             size_hint_y: None
             height: dp(40)
+            background_normal: ''
+            background_color: 0.3, 0.3, 0.3, 1
 
         Spinner:
             id: category_spinner
@@ -181,6 +251,8 @@ ScreenManager:
             values: ["General", "Food", "Travel", "Study", "Other"]
             size_hint_y: None
             height: dp(40)
+            background_normal: ''
+            background_color: 0.3, 0.3, 0.3, 1
 
         TextInput:
             id: date_input
@@ -188,6 +260,7 @@ ScreenManager:
             multiline: False
             size_hint_y: None
             height: dp(40)
+            background_color: 0.9, 0.9, 0.9, 1
 
         BoxLayout:
             size_hint_y: None
@@ -195,15 +268,20 @@ ScreenManager:
             spacing: dp(12)
             Button:
                 text: "Save"
+                background_normal: ''
+                background_color: 0.3, 0.3, 0.3, 1
                 on_press: root.save_transaction()
             Button:
                 text: "Cancel"
+                background_normal: ''
+                background_color: 0.3, 0.3, 0.3, 1
                 on_press: root.manager.current = "home"
+        Widget:
 
 <ReportScreen>:
     canvas.before:
         Color:
-            rgba: 0.07, 0.07, 0.07, 1  # พื้นหลังสีดำเข้ม
+            rgba: 0.07, 0.07, 0.07, 1
         Rectangle:
             pos: self.pos
             size: self.size
@@ -213,7 +291,6 @@ ScreenManager:
         padding: dp(20)
         spacing: dp(15)
 
-        # 1. หัวข้อและตัวเลือกเดือน
         BoxLayout:
             size_hint_y: None
             height: dp(50)
@@ -238,15 +315,13 @@ ScreenManager:
                 size_hint_x: 0.6
                 on_text: root.filter_report()
 
-        # 2. พื้นที่แสดงกราฟ (ใช้ Image Widget)
         Image:
             id: chart_image
             source: "" 
             allow_stretch: True
             keep_ratio: True
-            size_hint_y: 0.5  # ให้พื้นที่กราฟ 50% ของหน้าจอ
+            size_hint_y: 0.5 
 
-        # 3. ตารางสรุป (Table Summary)
         BoxLayout:
             orientation: "vertical"
             size_hint_y: None
@@ -254,13 +329,12 @@ ScreenManager:
             padding: dp(10)
             canvas.before:
                 Color:
-                    rgba: 0.15, 0.15, 0.15, 1 # พื้นหลังตารางสีเทา
+                    rgba: 0.15, 0.15, 0.15, 1
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
                     radius: [10]
 
-            # หัวตาราง
             GridLayout:
                 cols: 3
                 size_hint_y: None
@@ -278,7 +352,6 @@ ScreenManager:
                     color: 0.2, 0.6, 1, 1
                     bold: True
             
-            # เส้นขีดคั่น
             Widget:
                 size_hint_y: None
                 height: dp(1)
@@ -289,7 +362,6 @@ ScreenManager:
                         pos: self.x, self.y
                         size: self.width, self.height
 
-            # ข้อมูลตัวเลข
             GridLayout:
                 cols: 3
                 Label:
@@ -306,11 +378,9 @@ ScreenManager:
                     font_size: '18sp'
                     bold: True
 
-        # พื้นที่ว่างดันปุ่มกลับลงไป
         Widget: 
             size_hint_y: 0.1
 
-        # ปุ่มย้อนกลับ
         Button:
             text: "Back"
             size_hint_y: None
@@ -320,21 +390,102 @@ ScreenManager:
             on_press: root.manager.current = "home"
 
 <SettingScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.07, 0.07, 0.07, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
     BoxLayout:
         orientation: "vertical"
-        padding: dp(16)
-        spacing: dp(12)
 
-        Label:
-            text: "Settings"
-            font_size: 20
+        BoxLayout:
             size_hint_y: None
-            height: dp(50)
-            halign: 'center'
-            valign: 'middle'
+            height: dp(60)
+            padding: dp(20)
+            Label:
+                text: "Settings"
+                font_size: '24sp'
+                bold: True
+                halign: 'left'
+                text_size: self.size
+
+        ScrollView:
+            GridLayout:
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(20)
+                spacing: dp(20)
+
+                Label:
+                    text: "GENERAL"
+                    color: 0.5, 0.5, 0.5, 1
+                    font_size: '14sp'
+                    size_hint_y: None
+                    height: dp(30)
+                    halign: 'left'
+                    text_size: self.size
+
+                # ตรงนี้เปลี่ยนมาใช้ MySettingItem แทน SettingItem เพื่อแก้ Error
+                MySettingItem:
+                    Label:
+                        text: "Currency"
+                        halign: 'left'
+                        text_size: self.size
+                        valign: 'middle'
+                    Spinner:
+                        id: currency_spinner
+                        text: "THB (฿)"
+                        values: ["THB (฿)", "USD ($)", "EUR (€)"]
+                        size_hint_x: None
+                        width: dp(100)
+                        background_normal: ''
+                        background_color: 0.2, 0.2, 0.2, 1
+
+                Label:
+                    text: "DATA MANAGEMENT"
+                    color: 0.5, 0.5, 0.5, 1
+                    font_size: '14sp'
+                    size_hint_y: None
+                    height: dp(30)
+                    halign: 'left'
+                    text_size: self.size
+                
+                Button:
+                    text: "Export to CSV"
+                    size_hint_y: None
+                    height: dp(50)
+                    background_normal: ''
+                    background_color: 0.2, 0.2, 0.6, 1
+                    on_release: root.export_data()
+
+                Button:
+                    text: "Clear All Data"
+                    color: 1, 0.3, 0.3, 1
+                    size_hint_y: None
+                    height: dp(50)
+                    background_normal: ''
+                    background_color: 0.2, 0.1, 0.1, 1
+                    on_release: root.clear_data()
+
+                Widget:
+                    size_hint_y: None
+                    height: dp(20)
+                
+                Label:
+                    text: "Version 1.0.0\nDeveloped by CuteGroup"
+                    color: 0.3, 0.3, 0.3, 1
+                    font_size: '12sp'
+                    halign: 'center'
+                    size_hint_y: None
+                    height: dp(50)
 
         Button:
             text: "Back"
             size_hint_y: None
-            height: dp(44)
-            on_press: root.manager.current = "home"
+            height: dp(60)
+            background_normal: ''
+            background_color: 0.15, 0.15, 0.15, 1
+            on_release: root.manager.current = "home"
