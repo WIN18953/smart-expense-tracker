@@ -1,22 +1,18 @@
 #:import dp kivy.metrics.dp
 #:import hex kivy.utils.get_color_from_hex
 
-# --- ส่วนประกอบย่อย (Custom Widgets) ---
-
-# 1. รายการธุรกรรม (Transaction List Item) - เพื่อให้สวยเหมือนในภาพ
 <TransactionItem@BoxLayout>:
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 0.05 # พื้นหลังจางๆ
-        Rectangle:
-            pos: self.pos
-            size: self.size
+            rgba: app.col_subtext if app.col_subtext else (0.5, 0.5, 0.5, 0.2)
+        Line:
+            points: [self.x, self.y, self.width, self.y]
+            width: 1
     size_hint_y: None
     height: dp(60)
     padding: dp(15), 0
     spacing: dp(15)
 
-    # ไอคอนวงกลม
     Widget:
         size_hint: None, None
         size: dp(10), dp(10)
@@ -28,20 +24,19 @@
                 pos: self.pos
                 size: self.size
 
-    # รายละเอียด
     Label:
         text: root.text_content if hasattr(root, 'text_content') else ""
         font_size: '14sp'
-        color: 1, 1, 1, 1
+        color: app.col_text # ใช้สีจาก App
         text_size: self.width, None
         halign: 'left'
         valign: 'middle'
+        font_name: app.font_name # ใช้ฟอนต์จาก App
 
-# 2. หัวข้อในหน้า Setting (เปลี่ยนชื่อเพื่อแก้บั๊ก)
 <MySettingItem@BoxLayout>:
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 0.05
+            rgba: app.col_card
         Rectangle:
             pos: self.pos
             size: self.size
@@ -50,7 +45,6 @@
     padding: dp(20), 0
     spacing: dp(20)
 
-# 3. ป้ายสรุปยอดเงิน
 <SummaryLabel@Label>:
     size_hint_y: None
     height: dp(40)
@@ -58,6 +52,8 @@
     halign: 'center'
     valign: 'middle'
     font_size: '16sp'
+    color: app.col_text
+    font_name: app.font_name
 
 ScreenManager:
     HomeScreen:
@@ -72,7 +68,7 @@ ScreenManager:
 <HomeScreen>:
     canvas.before:
         Color:
-            rgba: 0, 0, 0, 1 # พื้นหลังดำสนิท
+            rgba: app.col_bg # พื้นหลังเปลี่ยนตามธีม
         Rectangle:
             pos: self.pos
             size: self.size
@@ -89,6 +85,8 @@ ScreenManager:
             height: dp(60)
             halign: 'center'
             valign: 'middle'
+            color: app.col_text
+            font_name: app.font_name
             
         BoxLayout:
             size_hint_y: None
@@ -96,20 +94,23 @@ ScreenManager:
             spacing: dp(10)
             
             Label:
-                text: "Select Month:"
+                text: app.txt_select_month
                 size_hint_x: None
                 width: dp(100)
-                color: 0.5, 0.5, 0.5, 1
+                color: app.col_subtext
                 valign: 'middle'
+                font_name: app.font_name
 
             Spinner:
                 id: month_filter
-                text: "All Time"
-                values: ["All Time"]
+                text: app.txt_all_time
+                values: [app.txt_all_time]
                 size_hint_y: None
                 height: dp(40)
                 background_normal: ''
-                background_color: 0.2, 0.2, 0.2, 1
+                background_color: app.col_card
+                color: app.col_text
+                font_name: app.font_name
                 on_text: root.refresh()
 
         # ส่วนแสดงยอดเงิน
@@ -122,71 +123,88 @@ ScreenManager:
             BoxLayout:
                 orientation: "vertical"
                 Label:
-                    text: "Income"
+                    text: app.txt_income
                     color: 0, 1, 0, 1
                     font_size: '14sp'
+                    font_name: app.font_name
                 Label:
                     id: income_label
                     text: "0"
                     font_size: '18sp'
                     bold: True
+                    color: app.col_text
+                    font_name: app.font_name
 
             BoxLayout:
                 orientation: "vertical"
                 Label:
-                    text: "Expense"
+                    text: app.txt_expense
                     color: 1, 0, 0, 1
                     font_size: '14sp'
+                    font_name: app.font_name
                 Label:
                     id: expense_label
                     text: "0"
                     font_size: '18sp'
                     bold: True
+                    color: app.col_text
+                    font_name: app.font_name
 
             BoxLayout:
                 orientation: "vertical"
                 Label:
-                    text: "Balance"
+                    text: app.txt_balance
                     color: 0.2, 0.6, 1, 1
                     font_size: '14sp'
+                    font_name: app.font_name
                 Label:
                     id: balance_label
                     text: "0"
                     font_size: '18sp'
                     bold: True
+                    color: app.col_text
+                    font_name: app.font_name
 
         # ปุ่มเมนู
         Button:
-            text: "Add Transaction"
+            text: app.txt_menu_home
             size_hint_y: None
             height: dp(48)
             background_normal: ''
-            background_color: 0.3, 0.3, 0.3, 1
+            background_color: app.col_card
+            color: app.col_text
+            font_name: app.font_name
             on_press: root.manager.current = "add"
 
         Button:
-            text: "View Report"
+            text: app.txt_menu_report
             size_hint_y: None
             height: dp(48)
             background_normal: ''
-            background_color: 0.3, 0.3, 0.3, 1
+            background_color: app.col_card
+            color: app.col_text
+            font_name: app.font_name
             on_press: root.manager.current = "report"
 
         Button:
-            text: "Settings"
+            text: app.txt_menu_settings
             size_hint_y: None
             height: dp(48)
             background_normal: ''
-            background_color: 0.3, 0.3, 0.3, 1
+            background_color: app.col_card
+            color: app.col_text
+            font_name: app.font_name
             on_press: root.manager.current = "setting"
 
         Label:
-            text: "Transactions:"
+            text: app.txt_transactions
             size_hint_y: None
             height: dp(40)
             text_size: self.width, None
             halign: 'center'
             valign: 'middle'
+            color: app.col_text
+            font_name: app.font_name
 
         # รายการธุรกรรม
         ScrollView:
@@ -202,7 +220,7 @@ ScreenManager:
 <AddScreen>:
     canvas.before:
         Color:
-            rgba: 0, 0, 0, 1
+            rgba: app.col_bg
         Rectangle:
             pos: self.pos
             size: self.size
@@ -212,76 +230,91 @@ ScreenManager:
         spacing: dp(12)
 
         Label:
-            text: "Add Transaction"
+            text: app.txt_add_title
             font_size: 24
             size_hint_y: None
             height: dp(50)
             halign: 'center'
             valign: 'middle'
+            color: app.col_text
+            font_name: app.font_name
 
         TextInput:
             id: amount_input
-            hint_text: "Amount"
+            hint_text: app.txt_hint_amount
             input_filter: "float"
             multiline: False
             size_hint_y: None
             height: dp(40)
-            background_color: 0.9, 0.9, 0.9, 1
+            background_color: app.col_input_bg
+            font_name: app.font_name
 
         TextInput:
             id: note_input
-            hint_text: "Note"
+            hint_text: app.txt_hint_note
             multiline: False
             size_hint_y: None
             height: dp(40)
-            background_color: 0.9, 0.9, 0.9, 1
+            background_color: app.col_input_bg
+            font_name: app.font_name
 
+        # --- แก้ไข Spinner ตรงนี้ ---
         Spinner:
             id: type_spinner
-            text: "Income"
-            values: ["Income", "Expense"]
+            text: app.type_values[0] if app.type_values else "" # ให้เลือกตัวแรกของภาษาปัจจุบันอัตโนมัติ
+            values: app.type_values  # ใช้ตัวแปรจาก App
             size_hint_y: None
             height: dp(40)
             background_normal: ''
-            background_color: 0.3, 0.3, 0.3, 1
+            background_color: app.col_card
+            color: app.col_text
+            font_name: app.font_name
 
         Spinner:
             id: category_spinner
-            text: "General"
-            values: ["General", "Food", "Travel", "Study", "Other"]
+            text: app.category_values[0] if app.category_values else "" # ให้เลือกตัวแรกของภาษาปัจจุบันอัตโนมัติ
+            values: app.category_values # ใช้ตัวแปรจาก App
             size_hint_y: None
             height: dp(40)
             background_normal: ''
-            background_color: 0.3, 0.3, 0.3, 1
+            background_color: app.col_card
+            color: app.col_text
+            font_name: app.font_name
+        # ------------------------
 
         TextInput:
             id: date_input
-            hint_text: "Date (DD/MM/YYYY)"
+            hint_text: app.txt_hint_date
             multiline: False
             size_hint_y: None
             height: dp(40)
-            background_color: 0.9, 0.9, 0.9, 1
+            background_color: app.col_input_bg
+            font_name: app.font_name
 
         BoxLayout:
             size_hint_y: None
             height: dp(48)
             spacing: dp(12)
             Button:
-                text: "Save"
+                text: app.txt_btn_save
                 background_normal: ''
-                background_color: 0.3, 0.3, 0.3, 1
+                background_color: app.col_card
+                color: app.col_text
+                font_name: app.font_name
                 on_press: root.save_transaction()
             Button:
-                text: "Cancel"
+                text: app.txt_btn_cancel
                 background_normal: ''
-                background_color: 0.3, 0.3, 0.3, 1
+                background_color: app.col_card
+                color: app.col_text
+                font_name: app.font_name
                 on_press: root.manager.current = "home"
         Widget:
 
 <ReportScreen>:
     canvas.before:
         Color:
-            rgba: 0.07, 0.07, 0.07, 1
+            rgba: app.col_bg
         Rectangle:
             pos: self.pos
             size: self.size
@@ -297,22 +330,24 @@ ScreenManager:
             spacing: dp(10)
             
             Label:
-                text: "Monthly Report"
+                text: app.txt_report_title
                 font_size: '22sp'
                 bold: True
-                color: 1, 1, 1, 1
+                color: app.col_text
                 size_hint_x: 0.4
                 halign: 'left'
                 text_size: self.size
+                font_name: app.font_name
 
             Spinner:
                 id: month_spinner
-                text: "Select Month"
+                text: app.txt_select_month
                 values: []
                 background_normal: ''
-                background_color: 0.2, 0.2, 0.2, 1
-                color: 1, 1, 1, 1
+                background_color: app.col_card
+                color: app.col_text
                 size_hint_x: 0.6
+                font_name: app.font_name
                 on_text: root.filter_report()
 
         Image:
@@ -329,7 +364,7 @@ ScreenManager:
             padding: dp(10)
             canvas.before:
                 Color:
-                    rgba: 0.15, 0.15, 0.15, 1
+                    rgba: app.col_card
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
@@ -340,17 +375,20 @@ ScreenManager:
                 size_hint_y: None
                 height: dp(30)
                 Label:
-                    text: "INCOME"
+                    text: app.txt_income
                     color: 0, 1, 0, 1
                     bold: True
+                    font_name: app.font_name
                 Label:
-                    text: "EXPENSE"
+                    text: app.txt_expense
                     color: 1, 0, 0, 1
                     bold: True
+                    font_name: app.font_name
                 Label:
-                    text: "BALANCE"
+                    text: app.txt_balance
                     color: 0.2, 0.6, 1, 1
                     bold: True
+                    font_name: app.font_name
             
             Widget:
                 size_hint_y: None
@@ -368,31 +406,39 @@ ScreenManager:
                     id: report_income
                     text: "0.00"
                     font_size: '18sp'
+                    color: app.col_text
+                    font_name: app.font_name
                 Label:
                     id: report_expense
                     text: "0.00"
                     font_size: '18sp'
+                    color: app.col_text
+                    font_name: app.font_name
                 Label:
                     id: report_balance
                     text: "0.00"
                     font_size: '18sp'
                     bold: True
+                    color: app.col_text
+                    font_name: app.font_name
 
         Widget: 
             size_hint_y: 0.1
 
         Button:
-            text: "Back"
+            text: app.txt_btn_back
             size_hint_y: None
             height: dp(50)
             background_normal: ''
-            background_color: 0.2, 0.2, 0.2, 1
+            background_color: app.col_card
+            color: app.col_text
+            font_name: app.font_name
             on_press: root.manager.current = "home"
 
 <SettingScreen>:
     canvas.before:
         Color:
-            rgba: 0.07, 0.07, 0.07, 1
+            rgba: app.col_bg
         Rectangle:
             pos: self.pos
             size: self.size
@@ -405,11 +451,13 @@ ScreenManager:
             height: dp(60)
             padding: dp(20)
             Label:
-                text: "Settings"
+                text: app.txt_setting_title
                 font_size: '24sp'
                 bold: True
                 halign: 'left'
                 text_size: self.size
+                color: app.col_text
+                font_name: app.font_name
 
         ScrollView:
             GridLayout:
@@ -419,22 +467,68 @@ ScreenManager:
                 padding: dp(20)
                 spacing: dp(20)
 
+                # --- Language & Theme ---
                 Label:
-                    text: "GENERAL"
-                    color: 0.5, 0.5, 0.5, 1
+                    text: app.txt_appearance
+                    color: app.col_subtext
                     font_size: '14sp'
                     size_hint_y: None
                     height: dp(30)
                     halign: 'left'
                     text_size: self.size
+                    font_name: app.font_name
 
-                # ตรงนี้เปลี่ยนมาใช้ MySettingItem แทน SettingItem เพื่อแก้ Error
                 MySettingItem:
                     Label:
-                        text: "Currency"
+                        text: app.txt_language
                         halign: 'left'
                         text_size: self.size
                         valign: 'middle'
+                        color: app.col_text
+                        font_name: app.font_name
+                    Button:
+                        text: "EN / TH"
+                        size_hint_x: None
+                        width: dp(100)
+                        background_normal: ''
+                        background_color: hex('#2979FF')
+                        on_release: app.switch_language()
+
+                MySettingItem:
+                    Label:
+                        text: app.txt_theme_mode
+                        halign: 'left'
+                        text_size: self.size
+                        valign: 'middle'
+                        color: app.col_text
+                        font_name: app.font_name
+                    Button:
+                        text: "Toggle"
+                        size_hint_x: None
+                        width: dp(100)
+                        background_normal: ''
+                        background_color: hex('#2979FF')
+                        on_release: app.switch_theme()
+
+                # --- General ---
+                Label:
+                    text: app.txt_general
+                    color: app.col_subtext
+                    font_size: '14sp'
+                    size_hint_y: None
+                    height: dp(30)
+                    halign: 'left'
+                    text_size: self.size
+                    font_name: app.font_name
+
+                MySettingItem:
+                    Label:
+                        text: app.txt_currency
+                        halign: 'left'
+                        text_size: self.size
+                        valign: 'middle'
+                        color: app.col_text
+                        font_name: app.font_name
                     Spinner:
                         id: currency_spinner
                         text: "THB (฿)"
@@ -442,32 +536,37 @@ ScreenManager:
                         size_hint_x: None
                         width: dp(100)
                         background_normal: ''
-                        background_color: 0.2, 0.2, 0.2, 1
+                        background_color: app.col_card
+                        color: app.col_text
 
+                # --- Data Management ---
                 Label:
-                    text: "DATA MANAGEMENT"
-                    color: 0.5, 0.5, 0.5, 1
+                    text: app.txt_data_mgmt
+                    color: app.col_subtext
                     font_size: '14sp'
                     size_hint_y: None
                     height: dp(30)
                     halign: 'left'
                     text_size: self.size
+                    font_name: app.font_name
                 
                 Button:
-                    text: "Export to CSV"
+                    text: app.txt_btn_export
                     size_hint_y: None
                     height: dp(50)
                     background_normal: ''
                     background_color: 0.2, 0.2, 0.6, 1
+                    font_name: app.font_name
                     on_release: root.export_data()
 
                 Button:
-                    text: "Clear All Data"
+                    text: app.txt_btn_clear
                     color: 1, 0.3, 0.3, 1
                     size_hint_y: None
                     height: dp(50)
                     background_normal: ''
                     background_color: 0.2, 0.1, 0.1, 1
+                    font_name: app.font_name
                     on_release: root.clear_data()
 
                 Widget:
@@ -483,9 +582,10 @@ ScreenManager:
                     height: dp(50)
 
         Button:
-            text: "Back"
+            text: app.txt_btn_back
             size_hint_y: None
             height: dp(60)
             background_normal: ''
             background_color: 0.15, 0.15, 0.15, 1
+            font_name: app.font_name
             on_release: root.manager.current = "home"
