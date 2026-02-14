@@ -20,8 +20,10 @@ def save_data(data):
 
 # ---------- Screens ----------
 class HomeScreen(Screen):
+
     def on_enter(self):
         self.update_summary()
+        self.display_transactions()
 
     def update_summary(self):
         data = load_data()
@@ -32,6 +34,33 @@ class HomeScreen(Screen):
         self.ids.income_label.text = f"Income: {income}"
         self.ids.expense_label.text = f"Expense: {expense}"
         self.ids.balance_label.text = f"Balance: {balance}"
+
+    def display_transactions(self):
+        data = load_data()
+        container = self.ids.transaction_list
+        container.clear_widgets()
+
+        for index, item in enumerate(data):
+            text = f"{item['type']} | {item['amount']} | {item['category']}"
+            from kivy.uix.button import Button
+
+            btn = Button(
+                text=text,
+                size_hint_y=None,
+                height=40
+            )
+
+            btn.bind(on_press=lambda instance, i=index: self.delete_transaction(i))
+            container.add_widget(btn)
+
+    def delete_transaction(self, index):
+        data = load_data()
+        if index < len(data):
+            data.pop(index)
+            save_data(data)
+
+        self.update_summary()
+        self.display_transactions()
 
 
 class AddScreen(Screen):
