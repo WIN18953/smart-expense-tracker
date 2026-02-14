@@ -201,48 +201,122 @@ ScreenManager:
                 on_press: root.manager.current = "home"
 
 <ReportScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.07, 0.07, 0.07, 1  # พื้นหลังสีดำเข้ม
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
     BoxLayout:
         orientation: "vertical"
-        padding: dp(16)
-        spacing: dp(12)
+        padding: dp(20)
+        spacing: dp(15)
 
-        Label:
-            text: "Monthly Report"
-            font_size: 24
+        # 1. หัวข้อและตัวเลือกเดือน
+        BoxLayout:
             size_hint_y: None
             height: dp(50)
-            halign: 'center'
-            valign: 'middle'
+            spacing: dp(10)
+            
+            Label:
+                text: "Monthly Report"
+                font_size: '22sp'
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_x: 0.4
+                halign: 'left'
+                text_size: self.size
 
-        Spinner:
-            id: month_spinner
-            text: "Select Month"
-            values: []
+            Spinner:
+                id: month_spinner
+                text: "Select Month"
+                values: []
+                background_normal: ''
+                background_color: 0.2, 0.2, 0.2, 1
+                color: 1, 1, 1, 1
+                size_hint_x: 0.6
+                on_text: root.filter_report()
+
+        # 2. พื้นที่แสดงกราฟ (ใช้ Image Widget)
+        Image:
+            id: chart_image
+            source: "" 
+            allow_stretch: True
+            keep_ratio: True
+            size_hint_y: 0.5  # ให้พื้นที่กราฟ 50% ของหน้าจอ
+
+        # 3. ตารางสรุป (Table Summary)
+        BoxLayout:
+            orientation: "vertical"
             size_hint_y: None
-            height: dp(40)
+            height: dp(120)
+            padding: dp(10)
+            canvas.before:
+                Color:
+                    rgba: 0.15, 0.15, 0.15, 1 # พื้นหลังตารางสีเทา
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [10]
 
-        Button:
-            text: "Filter"
-            size_hint_y: None
-            height: dp(44)
-            on_press: root.filter_report()
+            # หัวตาราง
+            GridLayout:
+                cols: 3
+                size_hint_y: None
+                height: dp(30)
+                Label:
+                    text: "INCOME"
+                    color: 0, 1, 0, 1
+                    bold: True
+                Label:
+                    text: "EXPENSE"
+                    color: 1, 0, 0, 1
+                    bold: True
+                Label:
+                    text: "BALANCE"
+                    color: 0.2, 0.6, 1, 1
+                    bold: True
+            
+            # เส้นขีดคั่น
+            Widget:
+                size_hint_y: None
+                height: dp(1)
+                canvas:
+                    Color:
+                        rgba: 0.5, 0.5, 0.5, 1
+                    Rectangle:
+                        pos: self.x, self.y
+                        size: self.width, self.height
 
-        SummaryLabel:
-            id: report_income
-            text: "Income: 0"
+            # ข้อมูลตัวเลข
+            GridLayout:
+                cols: 3
+                Label:
+                    id: report_income
+                    text: "0.00"
+                    font_size: '18sp'
+                Label:
+                    id: report_expense
+                    text: "0.00"
+                    font_size: '18sp'
+                Label:
+                    id: report_balance
+                    text: "0.00"
+                    font_size: '18sp'
+                    bold: True
 
-        SummaryLabel:
-            id: report_expense
-            text: "Expense: 0"
+        # พื้นที่ว่างดันปุ่มกลับลงไป
+        Widget: 
+            size_hint_y: 0.1
 
-        SummaryLabel:
-            id: report_balance
-            text: "Balance: 0"
-
+        # ปุ่มย้อนกลับ
         Button:
             text: "Back"
             size_hint_y: None
-            height: dp(44)
+            height: dp(50)
+            background_normal: ''
+            background_color: 0.2, 0.2, 0.2, 1
             on_press: root.manager.current = "home"
 
 <SettingScreen>:

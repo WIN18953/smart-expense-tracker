@@ -7,6 +7,9 @@ from kivy.uix.button import Button
 from kivy.properties import ObjectProperty
 import json
 from datetime import datetime
+import matplotlib.pyplot as plt
+import io
+from kivy.core.image import Image as CoreImage
 
 # ---------- Database ----------
 def load_data():
@@ -197,7 +200,6 @@ class ReportScreen(Screen):
 
     def load_months(self):
         data = load_data()
-        # ดึงเดือนจากวันที่ (DD/MM/YYYY -> MM/YYYY)
         months = set()
         for item in data:
             d = item.get("date", "")
@@ -209,8 +211,11 @@ class ReportScreen(Screen):
         
         if sorted_months and "month_spinner" in self.ids:
             self.ids.month_spinner.values = sorted_months
-            self.ids.month_spinner.text = sorted_months[0]
-            self.filter_report() # เรียกคำนวณทันทีเมื่อเข้าหน้า
+            # เลือกเดือนล่าสุดอัตโนมัติ และเรียก filter_report
+            if self.ids.month_spinner.text not in sorted_months:
+                self.ids.month_spinner.text = sorted_months[0]
+            else:
+                self.filter_report()
 
     def filter_report(self):
         if "month_spinner" not in self.ids:
@@ -219,6 +224,7 @@ class ReportScreen(Screen):
         selected_month = self.ids.month_spinner.text
         data = load_data()
         
+        # 1. กรองข้อมูล
         filtered = []
         for item in data:
             d = item.get("date", "")
@@ -227,16 +233,65 @@ class ReportScreen(Screen):
                 if f"{parts[1]}/{parts[2]}" == selected_month:
                     filtered.append(item)
 
+        # 2. คำนวณยอด
         income = sum(item["amount"] for item in filtered if item.get("type") == "income")
         expense = sum(item["amount"] for item in filtered if item.get("type") == "expense")
         balance = income - expense
 
+        # 3. อัปเดตตารางตัวเลข
         if "report_income" in self.ids:
-            self.ids.report_income.text = f"Income: {income:,.2f}"
+            self.ids.report_income.text = f"{income:,.2f}"
         if "report_expense" in self.ids:
-            self.ids.report_expense.text = f"Expense: {expense:,.2f}"
+            self.ids.report_expense.text = f"{expense:,.2f}"
         if "report_balance" in self.ids:
-            self.ids.report_balance.text = f"Balance: {balance:,.2f}"
+            self.ids.report_balance.text = f"{balance:,.2f}"
+
+        # 4. สร้างกราฟ
+        self.generate_chart(income, expense)
+
+    def generate_chart(self, income, expense):
+        # ตั้งค่าสีและธีมให้เข้ากับแอป (Dark Theme)
+        plt.clf() # เคลียร์กราฟเก่า
+        fig = plt.figure(figsize=(5, 4), facecolor='#121212') # พื้นหลังนอกกราฟ
+        ax = plt.gca()
+        ax.set_facecolor('#121212') # พื้นหลังในกราฟ
+
+        # ข้อมูลกราฟ
+        categories = ['Income', 'Expense']
+        values = [income, expense]
+        colors = ['#00E676', '#FF5252'] # เขียว, แดง
+
+        # วาดกราฟแท่ง
+        bars = plt.bar(categories, values, color=colors, width=0.5)
+
+        # ปรับแต่งตัวหนังสือ
+        plt.title('Income vs Expense', color='white', fontsize=14, pad=20)
+        plt.xticks(color='white')
+        plt.yticks(color='white')
+        
+        # ลบเส้นขอบกราฟเพื่อให้ดูมินิมอล
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_color('#444444')
+        ax.spines['left'].set_color('#444444')
+
+        # ใส่ตัวเลขบนแท่งกราฟ
+        for bar in bars:
+            height = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2.0, height,
+                     f'{height:,.0f}',
+                     ha='center', va='bottom', color='white')
+
+        # แปลงกราฟเป็นรูปภาพเพื่อส่งให้ Kivy
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight') # เซฟลง Memory
+        buf.seek(0)
+        
+        # โหลดเข้า Image Widget
+        texture = CoreImage(buf, ext='png').texture
+        self.ids.chart_image.texture = texture
+        
+        plt.close(fig) # ปิดกราฟเพื่อคืน Ram
 
 class SettingScreen(Screen):
     pass
