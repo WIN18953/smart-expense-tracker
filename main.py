@@ -404,12 +404,14 @@ class ExpenseApp(App):
             self.col_bg = get_color_from_hex('#121212')
             self.col_text = [1, 1, 1, 1]
             self.col_subtext = [0.5, 0.5, 0.5, 1]
+            
             self.col_card = get_color_from_hex('#222222')
             self.col_input_bg = get_color_from_hex('#E0E0E0')
         else:
             self.col_bg = get_color_from_hex('#F5F5F5')
             self.col_text = [0, 0, 0, 1]
             self.col_subtext = [0.4, 0.4, 0.4, 1]
+            
             self.col_card = get_color_from_hex('#FFFFFF')
             self.col_input_bg = get_color_from_hex('#FFFFFF')
 
