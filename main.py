@@ -73,7 +73,7 @@ class HomeScreen(Screen):
         Clock.schedule_once(lambda dt: self.refresh(), 0)
 
     def load_month_list(self):
-        data = load_data()
+        expense_data = load_data()
         months = set()
         for item in data:
             date_str = item.get("date", "")
