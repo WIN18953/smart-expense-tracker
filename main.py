@@ -306,6 +306,7 @@ class SettingScreen(Screen):
         except Exception as e:
             print(f"Error export: {e}")
 
+# Main application class for Smart Expense Tracker
 class ExpenseApp(App):
     # --- Theme Properties ---
     is_dark_mode = True
