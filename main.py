@@ -398,6 +398,7 @@ class ExpenseApp(App):
         t = TRANSLATIONS[self.current_lang]
         self.txt_theme_mode = t['theme_light'] if self.is_dark_mode else t['theme_dark']
 
+# Update UI colors based on current theme (dark / light)
     def update_theme_colors(self):
         if self.is_dark_mode:
             self.col_bg = get_color_from_hex('#121212')
