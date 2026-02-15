@@ -190,7 +190,7 @@ class AddScreen(Screen):
             date_text = datetime.now().strftime("%d/%m/%Y")
         
         app = App.get_running_app()
-        t = TRANSLATIONS[app.current_lang]
+        translations = TRANSLATIONS[self.current_lang]
         
         final_type = "expense"
         if t_type_raw == t['type_income'] or t_type_raw == "Income":
@@ -275,7 +275,7 @@ class ReportScreen(Screen):
         for bar in bars:
             height = bar.get_height()
             plt.text(bar.get_x() + bar.get_width()/2.0, height,
-                     f'{height:,.0f}', ha='center', va='bottom', color=text_hex)
+                    f'{height:,.0f}', ha='center', va='bottom', color=text_hex)
         buf = io.BytesIO()
         plt.savefig(buf, format='png', bbox_inches='tight')
         buf.seek(0)
