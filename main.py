@@ -401,7 +401,9 @@ class ExpenseApp(App):
 # Update UI colors based on current theme (dark / light)
     def update_theme_colors(self):
         if self.is_dark_mode:
+            # Background color for main screen
             self.col_bg = get_color_from_hex('#121212')
+            # Text and subtext colors
             self.col_text = [1, 1, 1, 1]
             self.col_subtext = [0.5, 0.5, 0.5, 1]
             
