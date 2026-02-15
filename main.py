@@ -350,10 +350,12 @@ class ExpenseApp(App):
     category_values = ListProperty([])
     currency_symbol = StringProperty("฿")
 
+
     def build(self):
         self.update_language_texts()
         self.update_theme_colors()
         pass
+
 
     def change_currency(self, value):
         if "(" in value and ")" in value:
@@ -362,11 +364,13 @@ class ExpenseApp(App):
             if self.root and self.root.get_screen('home'):
                 self.root.get_screen('home').refresh()
 
+
     def switch_language(self):
         self.current_lang = 'th' if self.current_lang == 'en' else 'en'
         self.update_language_texts()
         if self.root:
             self.root.get_screen('home').load_month_list()
+
 
     def update_language_texts(self):
         t = TRANSLATIONS[self.current_lang]
@@ -392,11 +396,13 @@ class ExpenseApp(App):
         else:
             self.font_name = "Roboto"
 
+
     def switch_theme(self):
         self.is_dark_mode = not self.is_dark_mode
         self.update_theme_colors()
         t = TRANSLATIONS[self.current_lang]
         self.txt_theme_mode = t['theme_light'] if self.is_dark_mode else t['theme_dark']
+
 
 # Update UI colors based on current theme (dark / light)
     def update_theme_colors(self):
