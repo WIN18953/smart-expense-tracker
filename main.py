@@ -190,7 +190,7 @@ class AddScreen(Screen):
             date_text = datetime.now().strftime("%d/%m/%Y")
         
         app = App.get_running_app()
-        translations = TRANSLATIONS[self.current_lang]
+        translations = TRANSLATIONS[app.current_lang]
         
         final_type = "expense"
         if t_type_raw == translations['type_income'] or t_type_raw == "Income":
