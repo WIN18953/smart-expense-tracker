@@ -75,7 +75,7 @@ class HomeScreen(Screen):
     def load_month_list(self):
         expense_data = load_data()
         months = set()
-        for item in data:
+        for item in expense_data:
             date_str = item.get("date", "")
             parts = date_str.split('/')
             if len(parts) == 3:
@@ -193,7 +193,7 @@ class AddScreen(Screen):
         translations = TRANSLATIONS[self.current_lang]
         
         final_type = "expense"
-        if t_type_raw == t['type_income'] or t_type_raw == "Income":
+        if t_type_raw == translations['type_income'] or t_type_raw == "Income":
             final_type = "income"
         
         data = load_data()
